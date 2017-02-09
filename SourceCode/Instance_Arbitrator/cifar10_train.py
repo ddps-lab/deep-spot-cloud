@@ -129,7 +129,7 @@ def train():
           ck=checkpoint_path.rsplit('/', 1)[1]
           ud = random_id +"-" +ck+"-" + str(step)
           c=pycurl.Curl()
-          c.setopt(c.URL, 'https://h3hxathbwj.execute-api.us-east-1.amazonaws.com/deploy/?ud=%22'+ud+'%22')
+          c.setopt(c.URL, 'xxxxx://xxxxx.xxxxxx.xxxxx.xxxxx.xxx/xxx/xxxx'+'xxx')                         
           c.perform()
           upload_checkpoint_to_s3(checkpoint_path, step, "mj-bucket-1", random_id)
           break
