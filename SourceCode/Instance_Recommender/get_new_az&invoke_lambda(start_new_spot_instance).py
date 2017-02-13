@@ -21,7 +21,7 @@ def lambda_handler(event, context):
     
     buf = cStringIO.StringIO()
     c=pycurl.Curl()
-    c.setopt(c.URL, 'https://h3hxathbwj.execute-api.us-east-1.amazonaws.com/deploy/new-instance-'+new_region+'?az=%22'+new_az+'%22&ud=%22'+ud+'%22')
+    c.setopt(c.URL, 'xxxxx://xxxxxx.xxxxxxx.xxxxx.xxxx/xxxx/xxxx+new_region+xxx+new_az+xxxxx+ud+xxx')               
     c.setopt(c.WRITEFUNCTION, buf.write)
     c.perform()
     temp=buf.getvalue()
