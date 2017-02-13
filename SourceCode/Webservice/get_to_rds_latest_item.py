@@ -5,7 +5,7 @@ import pymysql
 import boto3
 import json
 
-conn = pymysql.connect(host="mj.cajasrj4yypo.us-east-1.rds.amazonaws.com", user="mj", passwd="2018year", db="g2instance", connect_timeout=5)
+conn = pymysql.connect(host="mj.cajasrj4yypo.us-east-1.rds.amazonaws.com", user="mj", passwd="*****", db="g2instance", connect_timeout=5)
 
 def lambda_handler(event, context):
     with conn.cursor() as cur:
