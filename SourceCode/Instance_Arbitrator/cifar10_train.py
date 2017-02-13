@@ -113,6 +113,8 @@ def train():
     cur_step = sess.run(global_step);
     print("current step is %s" % cur_step)
     interrupt_check_duration = 0.0
+    elapsed_time=time.time()
+    flag=0
     for step in xrange(cur_step, FLAGS.max_steps):
       start_time = time.time()
       _, loss_value = sess.run([train_op, loss])
@@ -157,6 +159,13 @@ def train():
       if step % 1000 == 0 or (step + 1) == FLAGS.max_steps:
         checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
         saver.save(sess, checkpoint_path, global_step=step)
+        
+      print (elapsed)
+      if elapsed%30==0 and flag==0:
+          print(upload_to_rds(step))
+          flag=1
+      elif elapsed %30 != 0 and flag==1:
+          flag=0  
 
 def check_if_interrupted() :
   buffer = StringIO()
@@ -180,6 +189,25 @@ def upload_checkpoint_to_s3(source_file, current_step, bucket, random_id):
     print(type(uploaded_name))
     conn.upload(uploaded_name, f, bucket)
 
+def get_az() :
+	buffer = StringIO()
+	c = pycurl.Curl()
+  	c.setopt(c.URL, 'http://169.254.169.254/2016-09-02/meta-data/placement/availability-zone')
+  	c.setopt(c.WRITEDATA, buffer)
+  	c.perform()
+  	c.close()
+  	body = buffer.getvalue()
+	return body
+
+def upload_to_rds(step):
+	az=get_az()
+	c_time=datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
+	c = pycurl.Curl()
+	c.setopt(c.URL, '***************'+az+'%22&step=%22'+str(step)+'%22&current_time=%22'+c_time+'%22')
+	c.perform()
+	c.close()
+	result="upload to rds"
+	return result
 
 def generate_random_prefix(N=10):
   return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N))
