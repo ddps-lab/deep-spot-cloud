@@ -22,7 +22,7 @@ def lambda_handler(event, context):
                 # az=a[1:]
                 temp=i[u'price'][:-1]
                 price=temp[1:]
-                result[str(i[u'az'])]=str(i[u'price']+"$")
+                result[str(i[u'az'])]=str("$"+i[u'price'])
     
     with conn.cursor() as cur:
         
@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     
         for row in rows:
            
-            result['time'] = str(row[0])
+            result['time'] = str(row[0])+" UTC"
             result['az'] = row[1]
             result['price'] = row[2]
             result['step'] = row[3]
