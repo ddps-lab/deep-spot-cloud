@@ -4,8 +4,9 @@ import pymysql
 import boto3
 import json
 client=boto3.client('dynamodb')
-conn = pymysql.connect(host="xxxxxxxxxxxxxxxxxxxx", user="mj", passwd="******", db="g2instance", connect_timeout=5)
+
 def lambda_handler(event, context):
+    conn = pymysql.connect(host="xxxxxxxxxxxxxxxxxxxx", user="mj", passwd="******", db="g2instance", connect_timeout=5)
     az=json.dumps('{}'.format(event['az']))
     step=json.dumps('{}'.format(event['step']))
     current_time=json.dumps('{}'.format(event['current_time']))
@@ -23,7 +24,7 @@ def lambda_handler(event, context):
                 if key==u'price':
                     a=value.values()
                     for i in a:
-                        price="$"+i
+                        price="$ "+i
 
     b=str(step)
     b=b[:-1]
@@ -40,5 +41,7 @@ def lambda_handler(event, context):
         cur.execute('insert into Spottable (Time, AZ, Price, Step) values(%s,%s,%s,%s)',(current_time,az,price,step))
 
         conn.commit()
+    cur.close()
+    conn.close() 
 
         return 0
