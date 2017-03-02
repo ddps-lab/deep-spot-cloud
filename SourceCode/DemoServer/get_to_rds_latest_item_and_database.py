@@ -1,5 +1,3 @@
-# import sys
-# import logging
 from datetime import datetime, timedelta
 import pymysql
 import boto3
@@ -7,30 +5,30 @@ import json
 import time
 
 dynamodb = boto3.resource('dynamodb')
+
 table = dynamodb.Table('g2-instance')
 
 
-
 def lambda_handler(event, context):
-    conn = pymysql.connect(host="xx.xxxx.xxxxxx.rds.amazonaws.com", user="mj", passwd="xxxxx", db="g2instance", connect_timeout=5)
+    conn = pymysql.connect(host="xxx.xxxxx.xxxx.rds.amazonaws.com", user="xx", passwd="xxxxxx",
+                           db="g2instance", connect_timeout=5)
 
-    local='{}'.format(event['local'])
+    local = '{}'.format(event['local'])
 
     response = table.scan()
 
-    result={}
+    result = {}
 
     for key, values in response.iteritems():
 
-        if key=="Items":
+        if key == "Items":
 
             for i in values:
-                
-                temp=i[u'price'][:-1]
+                temp = i[u'price'][:-1]
 
-                price=temp[1:]
+                price = temp[1:]
 
-                result[str(i[u'az'])]=str("$"+i[u'price'])
+                result[str(i[u'az'])] = str("$ " + i[u'price'])
 
     with conn.cursor() as cur:
 
@@ -41,13 +39,13 @@ def lambda_handler(event, context):
         item = rows[0]
 
         temp_time = datetime.strptime(str(item[0]), "%Y-%m-%d %H:%M:%S")
-        
+
         utc_time = temp_time + timedelta(hours=int(local))
-      
-        time_dif= ("+"+str(local)) if int(local)>=0 else ("-"+str(local))
-        
-        result['time'] = str(utc_time.strftime("%Y.%m.%d %H:%M:%S"))+" UTC "+time_dif
-      
+
+        time_dif = ("+" + str(local)) if int(local) >= 0 else ("-" + str(local))
+
+        result['time'] = str(utc_time.strftime("%Y.%m.%d %H:%M:%S")) + " UTC " + time_dif
+
         result['az'] = item[1]
 
         result['price'] = item[2]
@@ -59,4 +57,27 @@ def lambda_handler(event, context):
 
     conn.close()
 
+    conn = pymysql.connect(host="xxx.xxxxx.xxxx.rds.amazonaws.com", user="xx", passwd="xxxx",
+                           db="migration", connect_timeout=5)
+
+    with conn.cursor() as cur:
+
+        cur.execute("select az from Route ORDER BY id ASC")
+
+        rows = cur.fetchall()
+
+        for row in rows:
+            ids = result.get('migration', [])
+
+            ids.append(row)
+
+            result['migration'] = ids
+
+    cur.close()
+
+    conn.close()
+
     return result
+
+
+
