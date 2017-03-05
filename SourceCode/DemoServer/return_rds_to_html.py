@@ -73,6 +73,9 @@ def lambda_handler(event, context):
 
             result['migration'] = ids
 
+
+    
+
     cur.close()
 
     conn.close()
