@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 import pymysql
 import boto3
-import json
-import time
+# import json
+# import time
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -73,8 +73,11 @@ def lambda_handler(event, context):
 
             result['migration'] = ids
 
+    newlist = ' -> '.join(map(str, result['migration']))
 
-    
+    # print (newlist)
+
+    result['migration'] = newlist
 
     cur.close()
 
