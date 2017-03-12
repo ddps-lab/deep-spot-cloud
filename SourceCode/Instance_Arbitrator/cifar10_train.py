@@ -37,6 +37,7 @@ from __future__ import division
 from __future__ import print_function
 
 from datetime import datetime
+#import datetime
 import os.path
 import time
 
@@ -60,7 +61,7 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('train_dir', '/tmp/cifar10_train',
                            """Directory where to write event logs """
                            """and checkpoint.""")
-tf.app.flags.DEFINE_integer('max_steps', 1000000,
+tf.app.flags.DEFINE_integer('max_steps', 9223372036854775807,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
@@ -122,8 +123,8 @@ def train():
       interrupt_check_duration += duration
       if (float(interrupt_check_duration) > 5.0) :
         print("checking for interruption: %s", interrupt_check_duration)
-        if(check_if_interrupted()) :
-          print("interrupted")
+        if(decision_for_migration()) :
+          print("have to migrate")
           checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
           print("checkpoint path is %s" % checkpoint_path)
           saver.save(sess, checkpoint_path, global_step=step)
@@ -131,7 +132,7 @@ def train():
           ck=checkpoint_path.rsplit('/', 1)[1]
           ud = random_id +"-" +ck+"-" + str(step)
           c=pycurl.Curl()
-          c.setopt(c.URL, 'xxxxx://xxxxx.xxxxxx.xxxxx.xxxxx.xxx/xxx/xxxx'+'xxx')                         
+          c.setopt(c.URL, 'xxxxxxxxx.com/deploy/?ud=%22'+ud+'%22')
           c.perform()
           upload_checkpoint_to_s3(checkpoint_path, step, "mj-bucket-1", random_id)
           break
@@ -140,7 +141,6 @@ def train():
 
         interrupt_check_duration = 0.0
       assert not np.isnan(loss_value), 'Model diverged with loss = NaN'
-
       if step % 10 == 0:
         num_examples_per_step = FLAGS.batch_size
         examples_per_sec = num_examples_per_step / duration
@@ -159,35 +159,21 @@ def train():
       if step % 1000 == 0 or (step + 1) == FLAGS.max_steps:
         checkpoint_path = os.path.join(FLAGS.train_dir, 'model.ckpt')
         saver.save(sess, checkpoint_path, global_step=step)
-        
-      print (elapsed)
-      if elapsed%30==0 and flag==0:
-          print(upload_to_rds(step))
-          flag=1
-      elif elapsed %30 != 0 and flag==1:
-          flag=0  
+      elapsed= (int(time.time()-elapsed_time))
+      # print (elapsed)
+      if elapsed%300==0 and flag==0:
+        az=get_az()
+        c_time=datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
+        c = pycurl.Curl()
+        c.setopt(c.URL, 'xxxxxx/receive/?az=%22'+az+'%22&step=%22'+str(step)+'%22&current_time=%22'+c_time+'%22')
+        c.perform()
+        c.close()
+        flag=1
+      elif elapsed %300 != 0 and flag==1:
+        flag=0
 
-def check_if_interrupted() :
-  buffer = StringIO()
-  c = pycurl.Curl()
-  c.setopt(c.URL, interrupt_check_url)
-  c.setopt(c.WRITEDATA, buffer)
-  c.perform()
-  c.close()
-  body = buffer.getvalue()
-  #return bool(re.search('.*T.*Z', body))
-  return True
-  
-def upload_checkpoint_to_s3(source_file, current_step, bucket, random_id):
-  conn = tinys3.Connection(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"], tls=True)
-  upload_files = [source_file + "-" + str(current_step), source_file + "-" + str(current_step) + ".meta", source_file.rsplit('/', 1)[0]+"/checkpoint"]
-  pprint.pprint(random_id)
-  for uf in upload_files:
-    f = open(uf, 'rb')
-    uploaded_name = random_id + "-" + uf.rsplit('/', 1)[1]
-    print("file name: %s uploaded named: %s" % (uf, uploaded_name))
-    print(type(uploaded_name))
-    conn.upload(uploaded_name, f, bucket)
+def decision_for_migration():
+  return (os.path.isdir("/tmp/migration"))
 
 def get_az() :
 	buffer = StringIO()
@@ -199,15 +185,19 @@ def get_az() :
   	body = buffer.getvalue()
 	return body
 
-def upload_to_rds(step):
-	az=get_az()
-	c_time=datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
-	c = pycurl.Curl()
-	c.setopt(c.URL, '***************'+az+'%22&step=%22'+str(step)+'%22&current_time=%22'+c_time+'%22')
-	c.perform()
-	c.close()
-	result="upload to rds"
-	return result
+
+
+def upload_checkpoint_to_s3(source_file, current_step, bucket, random_id):
+  conn = tinys3.Connection(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"], tls=True)
+  upload_files = [source_file + "-" + str(current_step), source_file + "-" + str(current_step) + ".meta", source_file.rsplit('/', 1)[0]+"/checkpoint"]
+  pprint.pprint(random_id)
+  for uf in upload_files:
+    f = open(uf, 'rb')
+    uploaded_name = random_id + "-" + uf.rsplit('/', 1)[1]
+    print("file name: %s uploaded named: %s" % (uf, uploaded_name))
+    print(type(uploaded_name))
+    conn.upload(uploaded_name, f, bucket)
+
 
 def generate_random_prefix(N=10):
   return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N))
