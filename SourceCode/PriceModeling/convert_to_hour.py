@@ -1,16 +1,23 @@
 #!/usr/bin/python
 
-import sys, getopt
+import sys, getopt, time
+from collections import defaultdict
 from dateutil.parser import parse
 
 def convert_to_hourly_price(input_file, output_file):
-    previous_record = {'year':-1, 'month':-1, 'day':-1, 'hour':-1, 'minute':-1, 'second':-1, 'price':-1}
+    hourly_price = defaultdict(lambda:0.0, {})
+    previous_record = defaultdict(lambda:-1, {})
     for line in reversed(open(input_file).readlines()):  # reading in the reverse order (the oldest one first
         price_time = line.rstrip().split("\t")
         price = float(price_time[0])
-        timestamp = parse(price_time[1])
-        if previous_record['year'] > 0:
-            minute_passed
+        current_second = int(time.mktime(parse(price_time[1]).timetuple()))
+        current_hour = (current_second / 3600) * 3600
+        if (previous_record['seconds'] > 0):
+            if (previous_record['hour'] == current_hour): # no hour difference simply add the price
+                price_portion = (current_second - previous_record['seconds']) * previous_record['priice'] / 3600.0
+                hourly_price[str(current_hour)] += price_portion
+
+
 
 def main(argv):
     input_file_path = "us-west-2b_g2.2xlarge_linux"
