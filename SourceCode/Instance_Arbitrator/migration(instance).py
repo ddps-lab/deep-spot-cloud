@@ -39,7 +39,7 @@ def get_az() :
   return body
 
 def make_migration_notice():
-  path="/tmp/migration"
+  path="/tmp/migration-eab816fc"
   os.mkdir(path,0755);
 
 instance_time = None

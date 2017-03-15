@@ -173,7 +173,7 @@ def train():
         flag=0
 
 def decision_for_migration():
-  return (os.path.isdir("/tmp/migration"))
+  return (os.path.isdir("/tmp/migration-eab816fc"))
 
 def get_az() :
 	buffer = StringIO()
