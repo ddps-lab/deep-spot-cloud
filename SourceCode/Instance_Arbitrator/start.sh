@@ -17,7 +17,7 @@ do
 done
 echo $checkpoint_file_path
 init_cmd="python $bin_file_location --train_dir $file_location"
-init_cmd1="python $bin_file_location1"
+init_cmd1="python $bin_file_location1 &"
 if [ ${#checkpoint_file_path} -gt 0 ];
 then
   init_cmd="$init_cmd --checkpoint_dir $file_location"
@@ -30,7 +30,7 @@ then
   aws s3 cp s3://"$checkpoint_file_path".meta "$file_location""$real_name".meta --region us-east-1
   aws s3 cp s3://"$bucket_name"/"$id"-checkpoint "$file_location"/checkpoint --region us-east-1
 fi
-
+init_cmd="$init_cmd &"
 echo $init_cmd
 eval $init_cmd
 echo $init_cmd1
