@@ -1,9 +1,10 @@
 import boto3
 import pymysql
-
+import time
 
 def lambda_handler(event, context):
     # spot_id=None
+    time.sleep(120)
 
     conn = pymysql.connect(host="xxxxxx", user="mj", passwd="xxxxx",
                            db="migration", connect_timeout=5)
