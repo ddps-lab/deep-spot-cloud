@@ -38,8 +38,19 @@ def get_az() :
   body = buffer.getvalue()
   return body
 
+def get_instance_id():
+  buffer = cStringIO.StringIO()
+  c = pycurl.Curl()
+  c.setopt(c.URL, 'http://169.254.169.254/2016-09-02/meta-data/instance-id')
+  c.setopt(c.WRITEDATA, buffer)
+  c.perform()
+  c.close()
+  body = buffer.getvalue()
+  return body
+
 def make_migration_notice():
-  path="/tmp/migration-eab816fc"
+  instance_id=get_instance_id()
+  path="/tmp/"+instance_id
   os.mkdir(path,0755);
 
 instance_time = None
