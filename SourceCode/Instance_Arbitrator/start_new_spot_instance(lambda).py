@@ -39,7 +39,7 @@ def lambda_handler(event, context):
 
     client = boto3.client('ec2', region_name=new_region)
 
-    data = 'checkpoint-file-path:mj-bucket-1/' + ud
+    data = 'checkpoint-file-path:mj-bucket-1/' + ud + ',GitClone:git-clone-https://xxxxx:xxxxxx@github.com/mjaysonnn/code_for_deepspotcloud.git'
 
     response = client.request_spot_instances(
 
