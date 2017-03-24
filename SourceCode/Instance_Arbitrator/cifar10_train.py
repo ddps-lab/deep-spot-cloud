@@ -172,8 +172,22 @@ def train():
       elif elapsed %300 != 0 and flag==1:
         flag=0
 
+
+
+def get_instance_id():
+  buffer = cStringIO.StringIO()
+  c = pycurl.Curl()
+  c.setopt(c.URL, 'http://169.254.169.254/2016-09-02/meta-data/instance-id')
+  c.setopt(c.WRITEDATA, buffer)
+  c.perform()
+  c.close()
+  body = buffer.getvalue()
+  return body
+
 def decision_for_migration():
-  return (os.path.isdir("/tmp/migration"))
+  instance_id=get_instance_id()
+  path="/tmp/"+instance_id
+  return (os.path.isdir(path))
 
 def get_az() :
 	buffer = StringIO()
