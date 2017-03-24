@@ -38,13 +38,21 @@ def convert_to_hourly_price(input_file, output_file):
         previous_record['hour'] = current_hour
         previous_record['price'] = new_price
     
+    if len(output_file) > 0:
+        outcome = open(output_file, "w")
+    else:
+        outcome = sys.stdout
+
     for k in sorted(hourly_price):
-        print hour_to_timestamp(k),hourly_price[k]
+        outcome.write(str(k) + " " + str(hourly_price[k]) +"\n")
+
+    if outcome is not sys.stdout:
+        outcome.close()
 
 
 def main(argv):
     input_file_path = "us-west-2b_g2.2xlarge_linux"
-    output_file_path = "hourly-us-west-2b_g2.2xlarge_linux"
+    output_file_path = ""
     try:
         opts, args = getopt.getopt(argv,"h:i:o:",["ifile=","ofile="])
     except getopt.GetoptError:
@@ -58,8 +66,6 @@ def main(argv):
             input_file_path = arg
         elif opt in ("-o", "--ofile"):
             output_file_path = arg
-    print 'Input file is ', input_file_path
-    print 'Output file is ', output_file_path
     convert_to_hourly_price(input_file_path, output_file_path)
 
 if __name__ == "__main__":
