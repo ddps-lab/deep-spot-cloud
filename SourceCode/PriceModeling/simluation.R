@@ -77,6 +77,13 @@ generateTestTimeWindow <- function(time_series) {
   test_data
 }
 
+generateTestTime <- function(time_series, day, time) {
+  freq = frequency(time_series)
+  test_data=list()
+  test_data[["predict"]] = window(time_series, start=c(1,1), end=c(day, time))
+  
+}
+
 buildAllTimeSeries <- function(directory) {
   all_timeseries <- list()
   fnames <- list.files(directory) 
@@ -104,3 +111,45 @@ buildTestData <- function(all_time_series, all_arima) {
 printAccuracy <- function(type, outcome) {
   print(paste(type, "train", outcome[3], "test", outcome[4]))
 }
+
+getRmseThroughTime <- function(time_series, start_day, end_day, method, arima=NULL) {
+  test_rmse <- vector(length=(end_day-start_day)*24)
+  train_rmse <- vector(length=(end_day-start_day)*24)
+  eval_period = 12
+  for(i in seq(start_day, end_day)) {
+    for(j in seq(0, 23)) {
+      test_time = window(time_series, start=c(1,1), end=c(i,j))
+      eval_time = window(time_series, start=c(1,1), end=c(i+1,j))
+      if(method == "naive") {
+        total_acc = accuracy(rwf(test_time, eval_period), eval_time)
+      } else if(method == "snaive") {
+        total_acc = accuracy(snaive(test_time, eval_period), eval_time)
+      } else if(method == "meanf") {
+        total_acc = accuracy(meanf(test_time, eval_period), eval_time)
+      } else if(method =="stlf") {
+        total_acc = accuracy(forecast(test_time, eval_period), eval_time)
+      } else if(method == "arima") {
+        total_acc = accuracy(forecast(test_time, eval_period, model=arima), eval_time)
+      }
+      vec_index = (i-start_day) * 24 + j
+      test_rmse[vec_index] = total_acc[4]
+      train_rmse[vec_index] = total_acc[3]
+    }
+  }
+  print(paste(method, "train", mean(train_rmse), "test", mean(test_rmse)))
+  test_rmse
+}
+
+runAllTest <- function(all_time_series, all_arima) {
+  regions = names(all_time_series)
+  for (r in regions) {
+    print(r)
+    getRmseThroughTime(all_time_series[[r]], 120, 220, "naive")
+    getRmseThroughTime(all_time_series[[r]], 120, 220, "snaive")
+    getRmseThroughTime(all_time_series[[r]], 120, 220, "meanf")
+    getRmseThroughTime(all_time_series[[r]], 120, 220, "stlf")
+    getRmseThroughTime(all_time_series[[r]], 120, 220, "arima", all_arima[[r]][["all"]])
+    gc()
+  }
+}
+
