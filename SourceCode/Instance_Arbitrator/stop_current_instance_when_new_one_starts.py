@@ -2,61 +2,44 @@ import boto3
 import pymysql
 import time
 
+
 def lambda_handler(event, context):
-    # spot_id=None
+    # 00 to let new instance starts before termination happends
     time.sleep(120)
 
-    conn = pymysql.connect(host="xxxxxx", user="mj", passwd="xxxxx",
-                           db="migration", connect_timeout=5)
+    # 01 Mysql Instance
+    mysql_migration = pymysql.connect(host="mj3.xxxxxxx.us-east-1.rds.amazonaws.com", user="mj", passwd="xxxxxx",
+                                      db="migration", connect_timeout=5)
+    # 02 fetch current running instance from Mysql
+    with mysql_migration.cursor() as cur:
+        cur.execute("select instance_id , az from Route ORDER BY id DESC LIMIT 2")
 
-    with conn.cursor() as cur:
-        cur.execute("select instance_id , az from Route ORDER BY id DESC LIMIT 1")
+        rows = cur.fetchall()[1]
 
-        rows = cur.fetchall()
-
-        item = rows[0]
+        item = rows
 
         c_region = item[1][:-1]
 
         c_instance_id = item[0]
 
-        print (c_region)
+        print ("instance to be terminated")
         print (c_instance_id)
+        print (c_region)
 
-    cur.close()
-    conn.close()
+    mysql_migration.close()
 
-    sentence = "Terminating in " + c_region
+    current_status = "Terminating in " + c_region
 
+    # 03 Call An API to terminate instance
     ec2 = boto3.resource('ec2', region_name=c_region)
 
-    instances = ec2.instances.filter(
+    instances_to_terminate = ec2.instances.filter(
 
         Filters=[{'Name': 'instance-id', 'Values': [c_instance_id]}]
     )
 
-    for instance in instances:
+    for instance in instances_to_terminate:
         instance.terminate()
 
-        # print (instance)
-
-        # spot_id=instance.spot_instance_request_id   #alternatively you can use spot_request_id and cancel spot request but it doesn't shut down running ec2 instance
-
-
-        # print (instance.)
-        # print (instance.tags)
-        # for i in instance.tags:
-        # print (i[u'Value'])
-        # print (type(i[u'Value']))
-        # spot_id=i[u'Value']          # It's for the Spot Fleet Request It has tags including sfr-id(spot fleet request), and with this you can cancel spot fleet request including terminating ec2 instance contray to spot instance request
-
-    # client = boto3.client('ec2', region_name=c_region)
-    # response = client.cancel_spot_instance_requests(
-    #     SpotInstanceRequestIds=[
-    #     spot_id,     # It's canceling spot instance reuqest
-    #     ],
-
-    # )
-
-    print (sentence)
-    return sentence
+    print (current_status)
+    return current_status

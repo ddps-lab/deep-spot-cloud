@@ -1,49 +1,57 @@
 import boto3
-
-dynamodb = boto3.resource('dynamodb')
-
-table = dynamodb.Table('g2-instance')
-
 from boto3.dynamodb.conditions import Key, Attr
+
+# AWS Resource Init
+dynamodb = boto3.resource('dynamodb')
 
 
 def lambda_handler(event, context):
     p_price = None
-    az = '{}'.format(event['az'])
-    # az="us-east-1c"
-    response = table.scan()
+# 1 get az parameter
+    param_az = str(event.get('az', 'Unknown'))
 
-    a_table = {}
+    g2_spot_table = dynamodb.Table('g2-instance')
+# 2 fetch az that has the lowest price from DynamoDB
+    temp_table = {}
+    response = g2_spot_table.scan()
 
     for key, values in response.iteritems():
 
         if key == "Items":
 
             for i in values:
-                a_table[str(i[u'az'])] = float(i[u'price'])
+                temp_table[str(i[u'az'])] = float(i[u'price'])
 
-    lowest_az = min(a_table, key=a_table.get)  # return the key which has the lowest value
+    az_with_lowest = min(temp_table, key=temp_table.get)  # return the key which has the lowest value
 
-    lowest_price = a_table[lowest_az]
-    print ("information about lowest")
-    print (lowest_az)
-    print (lowest_price)
+    lowest_price = temp_table[az_with_lowest]
 
-    response = table.query(
-        KeyConditionExpression=Key('az').eq(az)
+# 3 and get price from current instance from DynamoDB
+    response = g2_spot_table.query(
+        KeyConditionExpression=Key('az').eq(param_az)
     )
     for i in response['Items']:
         p_price = i['price']
-    print("current running instance's information")
-    print az
-    print (p_price)
-    print (type(p_price))
 
-    print ("diff")
-    print (float(p_price) - float(lowest_price))
-    print (float(p_price) - float(lowest_price) >= 0.0800)
-    if (float(p_price) - float(lowest_price) >= 0.0800):
+    # 4 Compare Price and Show Result
+    print ("information about lowest")
+    print (az_with_lowest)
+    print (lowest_price)
+
+    print("current running instance's information")
+    print param_az
+    print (p_price)
+
+    price_difference=float(p_price) - float(lowest_price)
+
+    print ("price difference")
+    print (price_difference)
+
+    print ("migration needed?")
+
+    if (price_difference >= 0.0800):
+        print ("Yes")
         return True
     else:
+        print ("No")
         return False
-        # return (lowest_price)

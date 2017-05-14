@@ -1,47 +1,42 @@
-import sys
-import logging
 import pymysql
 import boto3
 import json
-client=boto3.client('dynamodb')
+
+# 0 AWS Resource Initialize
+client = boto3.client('dynamodb')
+
 
 def lambda_handler(event, context):
-    conn = pymysql.connect(host="xxxxxxxxxxxxxxxxxxxx", user="mj", passwd="******", db="g2instance", connect_timeout=5)
-    az=json.dumps('{}'.format(event['az']))
-    step=json.dumps('{}'.format(event['step']))
-    current_time=json.dumps('{}'.format(event['current_time']))
+# 1 Get 3 Parameters from EC2
+    param_az = str(event.get('az', 'us-east-1c'))
+    param_step = str(event.get('step', 'Unknown'))
+    param_current_time = (event.get('current_time', 'Unknown'))
 
-    a=str(az)
-    a=a[:-1]
-    az=a[1:]
+    price = ""
+# 2 From DynamoDB, get price associated with current instance
+    response = client.get_item(TableName='g2-instance', Key={'az': {'S': param_az}})
 
-    price=""
-
-    response = client.get_item(TableName='g2-instance', Key={'az':{'S':az}})
     for keys, values in response.iteritems():
         if keys == "Item":
             for key, value in values.iteritems():
-                if key==u'price':
-                    a=value.values()
+                if key == u'price':
+                    a = value.values()
+
                     for i in a:
-                        price="$ "+i
-
-    b=str(step)
-    b=b[:-1]
-    step=b[1:]
-
-    c=str(current_time)
-    c=c[:-1]
-    current_time=c[1:]
+                        price = "$ " + i
 
 
+# 3 Upload Status to Mysql Spottable
+    mysql_spottable = pymysql.connect(host="mj3.xxxxxxxxx.us-east-1.rds.amazonaws.com", user="mj", passwd="xxxxxx",
+                                      db="g2instance", connect_timeout=5)
+    with mysql_spottable.cursor() as cur:
 
-    with conn.cursor() as cur:
+        cur.execute('insert into Spottable (Time, az, Price, step) values(%s,%s,%s,%s)',
+                    (param_current_time, param_az, price, param_step))
+        mysql_spottable.commit()
 
-        cur.execute('insert into Spottable (Time, AZ, Price, Step) values(%s,%s,%s,%s)',(current_time,az,price,step))
+    mysql_spottable.close()
 
-        conn.commit()
-    cur.close()
-    conn.close() 
+    return 0
 
-        return 0
+
