@@ -162,7 +162,7 @@ def train():
       elif elapsed %300 != 0 and flag==1:
 	    flag=0
 
-
+  # start new instance with user-data
 def start_new_instance(checkpoint_path, step,random_id):
     checkpoint_name = checkpoint_path.rsplit('/', 1)[1]
     ud = random_id + "-" + checkpoint_name + "-" + str(step)
@@ -171,6 +171,7 @@ def start_new_instance(checkpoint_path, step,random_id):
     c.setopt(c.URL, 'https://xxxxxx.execute-api.us-east-1.amazonaws.com/deploy/?ud=%22' + ud + '%22')
     c.perform()
 
+  # get current instance-id
 def get_instance_id():
   buffer = StringIO()
   c = pycurl.Curl()
@@ -181,11 +182,13 @@ def get_instance_id():
   body = buffer.getvalue()
   return body
 
+  # checking if migration is needed
 def decision_for_migration():
   instance_id=get_instance_id()
   path="/tmp/"+instance_id
   return (os.path.isdir(path))
 
+  # checking for forced migration
 def check_if_interrupted() :
   buffer = StringIO()
   c = pycurl.Curl()
@@ -196,6 +199,7 @@ def check_if_interrupted() :
   body = buffer.getvalue()
   return bool(re.search('.*T.*Z', body))
 
+  # get current instance's availability zone
 def get_az() :
   buffer = StringIO()
   c = pycurl.Curl()
@@ -206,7 +210,7 @@ def get_az() :
   body = buffer.getvalue()
   return body
 
-
+  # upload CNN's current status(availability zone, step, current_time) to rds
 def uploading_current_status_to_rds(step):
   az = get_az()
   c_time = datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
@@ -217,6 +221,7 @@ def uploading_current_status_to_rds(step):
   c.perform()
   c.close()
 
+  # upload checkpointing file to S3
 def upload_checkpoint_to_s3(source_file, current_step, bucket, random_id):
   conn = tinys3.Connection(os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"], tls=True)
   upload_files = [source_file + "-" + str(current_step), source_file + "-" + str(current_step) + ".meta", source_file.rsplit('/', 1)[0]+"/checkpoint"]
