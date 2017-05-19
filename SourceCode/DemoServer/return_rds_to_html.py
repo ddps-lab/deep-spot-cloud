@@ -70,4 +70,3 @@ def lambda_handler(event, context):
         "lastinfo": resp_lastinfo_dict,
         "migration": resp_migration_list
     }
-

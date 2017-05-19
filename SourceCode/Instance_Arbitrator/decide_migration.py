@@ -7,11 +7,11 @@ dynamodb = boto3.resource('dynamodb')
 
 def lambda_handler(event, context):
     p_price = None
-# 1 get az parameter
+    # 1 get az parameter
     param_az = str(event.get('az', 'Unknown'))
 
     g2_spot_table = dynamodb.Table('g2-instance')
-# 2 fetch az that has the lowest price from DynamoDB
+    # 2 fetch az that has the lowest price from DynamoDB
     temp_table = {}
     response = g2_spot_table.scan()
 
@@ -26,7 +26,7 @@ def lambda_handler(event, context):
 
     lowest_price = temp_table[az_with_lowest]
 
-# 3 and get price from current instance from DynamoDB
+    # 3 and get price from current instance from DynamoDB
     response = g2_spot_table.query(
         KeyConditionExpression=Key('az').eq(param_az)
     )
@@ -42,14 +42,14 @@ def lambda_handler(event, context):
     print param_az
     print (p_price)
 
-    price_difference=float(p_price) - float(lowest_price)
+    price_difference = float(p_price) - float(lowest_price)
 
     print ("price difference")
     print (price_difference)
 
     print ("migration needed?")
 
-    if (price_difference >= 0.0800):
+    if price_difference >= 0.0800:
         print ("Yes")
         return True
     else:

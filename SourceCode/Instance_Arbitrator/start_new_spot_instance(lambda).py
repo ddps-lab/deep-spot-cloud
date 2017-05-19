@@ -38,7 +38,9 @@ def start_new_instance(user_data_param, new_az):
 
     client = boto3.client('ec2', region_name=new_region)
 
-    user_data = 'checkpoint-file-path:mj-bucket-1/' + user_data_param + ',GitClone:git-clone-https://mjaysonnn:2####@github.com/mjaysonnn/code_for_deepspotcloud.git'
+    user_data = 'checkpoint-file-path:mj-bucket-1/' + user_data_param + ',GitClone:git-clone-https://mjaysonnn:2' \
+                                                                        '####@github.com/mjaysonnn' \
+                                                                        '/code_for_deepspotcloud.git '
 
     response = client.request_spot_instances(
 
@@ -63,22 +65,17 @@ def start_new_instance(user_data_param, new_az):
 
 
 def lambda_handler(event, context):
-    # 02. Request Params(user-data)
+    # 01. Request Params(user-data)
     ud = str(event.get('ud', None))
 
-    # 03. get new region that has the lowest spot instance price
+    # 02. get new region that has the lowest spot instance price
     new_az = get_region_with_lowest()
 
     sentence = "Starting new instance in " + new_az
 
-    # 04. Call an API to request new spot instance
+    # 03. Call an API to request new spot instance
     user_data = start_new_instance(ud, new_az)
 
     print (sentence)
     print (user_data)
     return sentence
-
-
-
-
-

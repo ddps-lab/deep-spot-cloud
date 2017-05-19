@@ -65,7 +65,7 @@ def lambda_handler(event, context):
                 if i == "instance-id":
                     c_instance_id = j
 
-    # 03 call an API to get instance availability zone
+                    # 03 call an API to get instance availability zone
     client = boto3.client('ec2', region_name=c_region)
 
     instance_information = client.describe_instances(
@@ -84,7 +84,7 @@ def lambda_handler(event, context):
                 for j in (i['Instances']):
                     c_az = j[u'Placement'][u'AvailabilityZone']
 
-    # 04 get previous and current instance's price
+                    # 04 get previous and current instance's price
     dynamodb = boto3.resource('dynamodb')
 
     try:
