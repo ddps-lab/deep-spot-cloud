@@ -125,6 +125,7 @@ getRmseThroughTime <- function(time_series, start_day, end_day, method, arima=NU
       } else if(method == "snaive") {
         total_acc = accuracy(snaive(test_time, eval_period), eval_time)
       } else if(method == "meanf") {
+        test_time = window(time_series, start=c(i-7,j), end=c(i,j))
         total_acc = accuracy(meanf(test_time, eval_period), eval_time)
       } else if(method =="stlf") {
         total_acc = accuracy(forecast(test_time, eval_period), eval_time)
