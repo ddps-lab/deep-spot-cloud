@@ -4,15 +4,22 @@ import base64
 # 00. AWS Resource Initialize
 dynamodb = boto3.resource('dynamodb')
 
-# List of AMI-id in each region
-ami_list = {'ap-northeast-1': 'ami-e1e6b486', 'ap-southeast-1': 'ami-81c476e2', 'ap-southeast-2': 'ami-05171a66',
-            'eu-central-1': 'ami-340cdb5b', 'eu-west-1': 'ami-8c4278ea', 'us-east-1': 'ami-eab816fc',
-            'us-west-1': 'ami-13386073', 'us-west-2': 'ami-6f31bf0f'}
+#  List of AMI-id in each region
+ami_list = {
+    'ap-northeast-1': 'ami-04e1075132b58d401',
+    'ap-southeast-1': 'ami-0085d056966878386',
+    'ap-southeast-2': 'ami-0362e087f9bc95eab',
+    'eu-central-1': 'ami-073cbc06a519d841c',
+    'eu-west-1': 'ami-0b7fd2a785a106c16',
+    'us-east-1': 'ami-0dfff14193996f618',
+    'us-west-1': 'ami-03a8de9005d02ebbd',
+    'us-west-2': 'ami-0ed7044a16cb71007'
+}
 
 
 # function get new region that has the lowest spot instance price
 def get_region_with_lowest():
-    g2_spot_table = dynamodb.Table('g2-instance')
+    g2_spot_table = dynamodb.Table('DeepSpotCloud-G2SpotInstance-Price')
 
     response = g2_spot_table.scan()
 
@@ -38,9 +45,7 @@ def start_new_instance(user_data_param, new_az):
 
     client = boto3.client('ec2', region_name=new_region)
 
-    user_data = 'checkpoint-file-path:mj-bucket-1/' + user_data_param + ',GitClone:git-clone-https://mjaysonnn:2' \
-                                                                        '####@github.com/mjaysonnn' \
-                                                                        '/code_for_deepspotcloud.git '
+    user_data = 'checkpoint-file-path:deepspotcloud-cp-bucket/' + user_data_param
 
     response = client.request_spot_instances(
 
@@ -51,10 +56,9 @@ def start_new_instance(user_data_param, new_az):
         LaunchSpecification={
 
             'ImageId': ami_list[new_region],
-            'KeyName': 'macbook-mj',
+            'KeyName': 'mjay',
             'InstanceType': 'g2.2xlarge',
-            'SecurityGroups': ['mj-security'],
-
+            'SecurityGroupIds': ["sg-71ac970e"],
             'Placement': {
                 'AvailabilityZone': new_az
             },
