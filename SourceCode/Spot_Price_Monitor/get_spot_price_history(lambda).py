@@ -6,14 +6,12 @@ from datetime import datetime, timedelta
 dynamodb = boto3.resource('dynamodb')
 
 # 01. AZ which has g2 instances
-region_list = ['ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'eu-central-1', 'eu-west-1', 'us-east-1',
-               'us-west-1', 'us-west-2']  # regions which have g2.instances
+region_list = ['ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'eu-central-1', 'eu-west-1', 'us-east-1', 'us-west-1', 'us-west-2']
 
 
 def lambda_handler(event, context):
     # 02. DynamoDB Instance -("g2-instance"->Where Spot Instances Price is stored)
-    g2_spot_table = dynamodb.Table('g2-instance')
-
+    g2_spot_table = dynamodb.Table('DeepSpotCloud-G2SpotInstance-Price')
     # 03. Call API called "describe_spot_price_history" to fetch current spot price from each region
     for each_region in region_list:
         client = boto3.client('ec2', region_name=each_region)
@@ -27,6 +25,7 @@ def lambda_handler(event, context):
                 'Linux/UNIX (Amazon VPC)'
             ],
         )
+        print spot_price_dict
         # 04. Save spot price from each region into DynamoDB Table
         for key, value in spot_price_dict.iteritems():
             if key == u'SpotPriceHistory':
