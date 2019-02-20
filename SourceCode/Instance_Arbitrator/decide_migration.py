@@ -10,7 +10,7 @@ def lambda_handler(event, context):
     # 1 get az parameter
     param_az = str(event.get('az', 'Unknown'))
 
-    g2_spot_table = dynamodb.Table('g2-instance')
+    g2_spot_table = dynamodb.Table('DeepSpotCloud-G2SpotInstance-Price')
     # 2 fetch az that has the lowest price from DynamoDB
     temp_table = {}
     response = g2_spot_table.scan()
@@ -42,14 +42,12 @@ def lambda_handler(event, context):
     print param_az
     print (p_price)
 
-    price_difference = float(p_price) - float(lowest_price)
-
     print ("price difference")
-    print (price_difference)
+    print (float(p_price) - float(lowest_price))
 
     print ("migration needed?")
 
-    if price_difference >= 0.0800:
+    if (float(p_price) - float(lowest_price) >= 0.0800):
         print ("Yes")
         return True
     else:
