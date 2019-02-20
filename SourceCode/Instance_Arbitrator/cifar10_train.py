@@ -170,7 +170,7 @@ def start_new_instance(checkpoint_path, step, random_id):
     pprint.pprint((ud))
     c = pycurl.Curl()
     c.setopt(c.URL,
-             'https://xxxxxx.us-west-2.amazonaws.com/deploy/start-new-instance?ud=%22' + ud + '%22')
+             'https://xxxxxxxx.execute-api.us-west-2.amazonaws.com/deploy/start-new-instance?ud=%22' + ud + '%22')
     c.perform()
 
 
@@ -218,7 +218,7 @@ def uploading_current_status_to_rds(step):
     c_time = datetime.now().strftime("%Y-%m-%d,%H:%M:%S")
     c = pycurl.Curl()
     c.setopt(c.URL,
-             'https://xxxxxx.us-west-2.amazonaws.com/deploy/upload-deeplearning-status-to-rds?az=%22' + az + '%22&step=%22' + str(
+             'https://xxxxxxxx.execute-api.us-west-2.amazonaws.com/deploy/upload-deeplearning-status-to-rds?az=%22' + az + '%22&step=%22' + str(
                  step) + '%22&current_time=%22' + c_time + '%22')
     c.perform()
     c.close()
