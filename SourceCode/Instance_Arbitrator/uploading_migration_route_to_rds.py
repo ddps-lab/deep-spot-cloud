@@ -27,8 +27,9 @@ def lambda_handler(event, context):
     instance_time = None
 
     # 01 mysql migration instance to fetch prveious instance
-    mysql_migration_object = pymysql.connect(host="mj3.xxxxxx.us-east-1.rds.amazonaws.com", user="mj",
-                                             passwd="xxxxx",
+    mysql_migration_object = pymysql.connect(host="xxxxxxxx.us-west-2.rds.amazonaws.com",
+                                             user="deepspotcloud",
+                                             passwd="xxxxxx",
                                              db="migration", connect_timeout=5)
     with mysql_migration_object.cursor() as cur:
         try:
@@ -48,7 +49,7 @@ def lambda_handler(event, context):
 
     # 02 get instance_id , time, region from AWS SNS Services
 
-    message_from_sns_service = (event['Records'][0]['Sns']['Message'])
+    message_from_sns_service = (event["Records"][0]['Sns']['Message'])
 
     dict_message = ast.literal_eval(message_from_sns_service)
 
@@ -65,7 +66,7 @@ def lambda_handler(event, context):
                 if i == "instance-id":
                     c_instance_id = j
 
-                    # 03 call an API to get instance availability zone
+    # 03 call an API to get instance availability zone
     client = boto3.client('ec2', region_name=c_region)
 
     instance_information = client.describe_instances(
@@ -84,11 +85,11 @@ def lambda_handler(event, context):
                 for j in (i['Instances']):
                     c_az = j[u'Placement'][u'AvailabilityZone']
 
-                    # 04 get previous and current instance's price
+    # 04 get previous and current instance's price
     dynamodb = boto3.resource('dynamodb')
 
     try:
-        g2_spot_table = dynamodb.Table('g2-instance')
+        g2_spot_table = dynamodb.Table("DeepSpotCloud-G2SpotInstance-Price")
 
         price_for_p_az = g2_spot_table.query(
             KeyConditionExpression=Key('az').eq(p_az)
@@ -122,12 +123,13 @@ def lambda_handler(event, context):
     print("time is -> " + instance_time)
 
     # 06 put price in previous instance and upload information about current instance
-    mysql_migration_object1 = pymysql.connect(host="mj3.xxxxx.us-east-1.rds.amazonaws.com", user="mj",
-                                              passwd="xxxxx",
+    mysql_migration_object1 = pymysql.connect(host="xxxxxxxxx.us-west-2.rds.amazonaws.com",
+                                              user="deepspotcloud",
+                                              passwd="xxxxxxxx",
                                               db="migration", connect_timeout=5)
     with mysql_migration_object1.cursor() as cur:
 
-        cur.execute('insert into Route (instance_id, az, current_price, time) values(%s,%s,%s,%s)',
+        cur.execute('insert into Route (instance_id, az, current_price, launch_time) values(%s,%s,%s,%s)',
                     (c_instance_id, c_az, c_price, instance_time))
         try:
             cur.execute("UPDATE Route SET previous_price=%s WHERE id=%s", (p_price, int(p_id)))
