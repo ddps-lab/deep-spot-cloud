@@ -8,8 +8,11 @@ def lambda_handler(event, context):
     time.sleep(120)
 
     # 01 Mysql Instance
-    mysql_migration = pymysql.connect(host="mj3.xxxxxxx.us-east-1.rds.amazonaws.com", user="mj", passwd="xxxxxx",
+    mysql_migration = pymysql.connect(host="xxxxxxxxx.us-west-2.rds.amazonaws.com",
+                                      user="deepspotcloud",
+                                      passwd="xxxxxx",
                                       db="migration", connect_timeout=5)
+
     # 02 fetch current running instance from Mysql
     with mysql_migration.cursor() as cur:
         cur.execute("select instance_id , az from Route ORDER BY id DESC LIMIT 2")
