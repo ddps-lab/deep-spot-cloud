@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+
 import boto3
 import pymysql
 
@@ -15,12 +16,17 @@ def convert_utc_to_local(utctime_str, offset):
 
 def lambda_handler(event, context):
     # 02. MySQL and DynamoDB Instance
-    mysql_g2_obj = pymysql.connect(host="mj3.xxxxxx.us-east-1.rds.amazonaws.com",
-                                   user="mj", passwd="xxxxx", db="g2instance", connect_timeout=5)
-    mysql_migration_obj = pymysql.connect(host="mj3.xxxxx.us-east-1.rds.amazonaws.com", user="mj",
-                                          passwd="xxxx",
+    mysql_g2_obj = pymysql.connect(host="xxxxxx.c3idypdw48si.us-west-2.rds.amazonaws.com",
+                                   user="deepspotcloud",
+                                   passwd="xxxxxx",
+                                   db="deeplearning_status", connect_timeout=5)
+
+    mysql_migration_obj = pymysql.connect(host="xxxxxx.c3idypdw48si.us-west-2.rds.amazonaws.com",
+                                          user="deepspotcloud",
+                                          passwd="xxxxx",
                                           db="migration", connect_timeout=5)
-    dynamo_obj = dynamodb.Table('g2-instance')
+
+    dynamo_obj = dynamodb.Table('DeepSpotCloud-G2SpotInstance-Price')
 
     # 03. Request Params
     param_local = int(event.get('local', 0))
@@ -35,7 +41,7 @@ def lambda_handler(event, context):
     with mysql_g2_obj.cursor() as cur:
         resp_lastinfo_dict = {}
 
-        cur.execute("select * from Spottable ORDER BY Time DESC LIMIT 1")
+        cur.execute("select * from DeepLearningStatus ORDER BY c_time DESC LIMIT 1")
         try:
             row = cur.fetchall()[0]
 
@@ -52,7 +58,7 @@ def lambda_handler(event, context):
     with mysql_migration_obj.cursor() as cur:
         resp_migration_list = []
 
-        cur.execute("select az,current_price,time from Route ORDER BY id ASC")
+        cur.execute("select az,current_price, launch_time from Route ORDER BY id ASC")
 
         rows = cur.fetchall()
         for row in rows:
